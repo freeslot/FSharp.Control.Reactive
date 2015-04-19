@@ -16,13 +16,13 @@ module Builders =
         member __.Bind(m: IObservable<_>, f: _ -> IObservable<_>) = m.SelectMany(f)
         member __.Combine(comp1, comp2) = Observable.Concat(comp1, comp2)
         member __.Delay(f: _ -> IObservable<_>) = Observable.Defer(fun _ -> f())
-        member __.Zero() = Observable.Empty(Scheduler.CurrentThread :> IScheduler)
+        member __.Zero() = Observable.Empty()
         member __.For(sequence, body) = Observable.For(sequence, Func<_,_> body)
         member __.TryWith(m: IObservable<_>, h: #exn -> IObservable<_>) = Observable.Catch(m, h)
         member __.TryFinally(m, compensation) = Observable.Finally(m, Action compensation)
         member __.Using(res: #IDisposable, body) = Observable.Using((fun () -> res), Func<_,_> body)
         member __.While(guard, m: IObservable<_>) = Observable.While(Func<_> guard, m)
-        member __.Yield(x) = Observable.Return(x, Scheduler.CurrentThread)
+        member __.Yield(x) = Observable.Return(x)
         member __.YieldFrom m : IObservable<_> = m
         [<Obsolete("Use Yield. Return will be removed in an upcoming version of FSharp.Control.Reactive.")>]
         member inline __.Return(x) = __.Yield(x)
