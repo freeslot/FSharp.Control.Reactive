@@ -3,13 +3,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{ed23f688-c0d0-4102-93d5-0d832633f66d}</ProjectGuid>
+    <ProjectGuid>{ED23F688-C0D0-4102-93D5-0D832633F66D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>FSharp.Control.Reactive</RootNamespace>
     <AssemblyName>FSharp.Control.Reactive</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>FSharp.Control.Reactive</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <TargetFrameworkProfile />

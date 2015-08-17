@@ -3,13 +3,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{a8ebb4a5-80ed-43d5-8d7d-6a0f4e228c2f}</ProjectGuid>
+    <ProjectGuid>{A8EBB4A5-80ED-43D5-8D7D-6A0F4E228C2F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>FSharp.Control.Reactive.Tests</RootNamespace>
     <AssemblyName>FSharp.Control.Reactive.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>FSharp.Control.Reactive.Tests</Name>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <TargetFrameworkProfile />
@@ -59,8 +57,7 @@
   <ItemGroup>
     <ProjectReference Include="..\src\FSharp.Control.Reactive.fsproj">
       <Name>FSharp.Control.Reactive</Name>
-      <Project>{ed23f688-c0d0-4102-93d5-0d832633f66d}</Project>
-      <Private>True</Private>
+      <Project>{ED23F688-C0D0-4102-93D5-0D832633F66D}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

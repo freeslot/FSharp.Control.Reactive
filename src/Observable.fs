@@ -17,13 +17,13 @@ module Builders =
         member __.Bind(m: IObservable<_>, f: _ -> IObservable<_>) = m.SelectMany(f)
         member __.Combine(comp1, comp2) = Observable.Concat(comp1, comp2)
         member __.Delay(f: _ -> IObservable<_>) = Observable.Defer(fun _ -> f())
-        member __.Zero() = Observable.Empty(Scheduler.CurrentThread :> IScheduler)
+        member __.Zero() = Observable.Empty()
         member __.For(sequence, body) = Observable.For(sequence, Func<_,_> body)
         member __.TryWith(m: IObservable<_>, h: #exn -> IObservable<_>) = Observable.Catch(m, h)
         member __.TryFinally(m, compensation) = Observable.Finally(m, Action compensation)
         member __.Using(res: #IDisposable, body) = Observable.Using((fun () -> res), Func<_,_> body)
         member __.While(guard, m: IObservable<_>) = Observable.While(Func<_> guard, m)
-        member __.Yield(x) = Observable.Return(x, Scheduler.CurrentThread)
+        member __.Yield(x) = Observable.Return(x)
         member __.YieldFrom m : IObservable<_> = m
         [<Obsolete("Use Yield. Return will be removed in an upcoming version of FSharp.Control.Reactive.")>]
         member inline __.Return(x) = __.Yield(x)
@@ -101,6 +101,12 @@ module Builders =
 /// The Reactive module provides operators for working with IObservable<_> in F#.
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Observable =
+
+    let monitor = new Object()
+    let mutable subscriptions : Map<string,int> = Map.empty
+
+    let getSubscriptions () =
+        Map.toList subscriptions
 
     type Observer with
         /// Creates an observer from the specified onNext function.
@@ -1454,31 +1460,75 @@ module Observable =
         Observable.StartWith( source, values )
 
 
+    let loggedObservable<'T> subscriptionTag (observable:IObservable<'T>) =
+        let onSubscribe subsTag =
+            lock monitor (fun () ->
+                match subscriptions |> Map.tryFind subsTag with
+                | Some count ->
+                    let count = subscriptions.[subsTag]
+                    subscriptions <- subscriptions |> Map.add subsTag ( count + 1 )
+                | _ ->
+                    subscriptions <- subscriptions |> Map.add subsTag 1
+            )
+
+        let onDispose subsTag =
+            lock monitor (fun () ->
+                match subscriptions |> Map.tryFind subsTag with
+                | Some count when count > 1 ->
+                    let count = subscriptions.[subsTag]
+                    subscriptions <- subscriptions |> Map.add subsTag ( count - 1 )
+                | Some _ ->
+                    subscriptions <- subscriptions |> Map.remove subsTag
+                | _ -> ()
+            )
+
+        let subs (observer: IObserver<'T>) =
+            let disp = observable.Subscribe observer
+            onSubscribe subscriptionTag
+            {new IDisposable with
+                member x.Dispose () = 
+                    disp.Dispose()
+                    onDispose subscriptionTag
+            }
+        Observable.Create subs
+
+
     /// Subscribes to the Observable with a next fuction.
     let subscribe(onNext: 'T -> unit) (observable: IObservable<'T>) =
-          observable.Subscribe(Action<_> onNext)
+          let obs = loggedObservable "Default" observable
+          obs.Subscribe(Action<_> onNext)
+
+
+    /// Subscribes to the Observable with a next fuction and a tag
+    let subscribeWithTag subscriptionTag (onNext: 'T -> unit) (observable: IObservable<'T>) =
+          let obs = loggedObservable subscriptionTag observable
+          obs.Subscribe(Action<_> onNext)
 
 
     /// Subscribes to the Observable with a next and an error-function.
     let subscribeWithError  ( onNext     : 'T   -> unit     ) 
                             ( onError    : exn  -> unit     ) 
                             ( observable : IObservable<'T>  ) =
-        observable.Subscribe( Action<_> onNext, Action<exn> onError )
+        let obs = loggedObservable "Default" observable
+        obs.Subscribe( Action<_> onNext, Action<exn> onError )
     
      
     /// Subscribes to the Observable with a next and a completion callback.
     let subscribeWithCompletion (onNext: 'T -> unit) (onCompleted: unit -> unit) (observable: IObservable<'T>) =
-            observable.Subscribe(Action<_> onNext, Action onCompleted)
+            let obs = loggedObservable "Default" observable
+            obs.Subscribe(Action<_> onNext, Action onCompleted)
     
 
     /// Subscribes to the observable with all three callbacks
     let subscribeWithCallbacks onNext onError onCompleted (observable: IObservable<'T>) =
-        observable.Subscribe(Observer.Create(Action<_> onNext, Action<_> onError, Action onCompleted))
+        let obs = loggedObservable "Default" observable
+        obs.Subscribe(Observer.Create(Action<_> onNext, Action<_> onError, Action onCompleted))
 
 
     /// Subscribes to the observable with the given observer
     let subscribeObserver observer (observable: IObservable<'T>) =
-        observable.Subscribe observer
+        let obs = loggedObservable "Default" observable
+        obs.Subscribe observer
 
 
     /// Wraps the source sequence in order to run its subscription and unsubscription logic 
