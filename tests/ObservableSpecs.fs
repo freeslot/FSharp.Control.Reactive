@@ -7,9 +7,6 @@ open Builders
 open NUnit.Framework
 open Microsoft.Reactive.Testing
 open System.Reactive.Subjects
-open System.Reactive.Concurrency
-open FSharp.Control.Reactive.Observable
-
 
 let ``should be`` expectedNext expectedError expectedCompleted (observable:'a IObservable) =
     let next = ref 0
@@ -271,9 +268,8 @@ let ``combineLatest calls map function with pairs of latest values``() =
     let result   = ResizeArray()
     use obs1     = new Subject<int>()
     use obs2     = new Subject<int>()
-    let map (x, y)  = x + (y / 2)
-    Observable.combineLatest obs1 obs2
-        |> Observable.map map
+    let map x y  = x + (y / 2)
+    Observable.combineLatest map obs1 obs2
         |> Observable.subscribe(result.Add) 
         |> ignore
 
@@ -489,6 +485,9 @@ let ``timestampOn uses timestamps from the supplied scheduler``() =
     Assert.That(result.[0].Timestamp, Is.EqualTo firstNotificationAt)
     Assert.That(result.[1].Timestamp, Is.EqualTo secondNotificationAt)
 
+
+open FSharp.Control.Reactive.Observable
+
 [<Test>]
 let ``Observable.Create should support a simple observable returning fun () -> ()``() =
     let obs =
@@ -499,55 +498,3 @@ let ``Observable.Create should support a simple observable returning fun () -> (
 
     use x = obs.Subscribe(fun result -> Assert.That(result, Is.EqualTo "xxx"))
     ()
-
-[<Test>]
-let ``Observable.subscribeOn should run subscription on another thread`` () =
-    let expected  = "Hello World"
-    let scheduler = new TestScheduler()
-    let result    = ResizeArray()
-    let oneSecond = TimeSpan.FromSeconds(1.).Ticks
-    let obs =
-        Observable.Create(fun (o : IObserver<_>) ->
-            scheduler.Schedule(Action(fun () -> o.OnNext(expected)))
-            )
-    use x = obs
-            |> Observable.subscribeOn(scheduler)
-            |> Observable.subscribe(result.Add)
-    Assert.IsTrue(result |> Seq.isEmpty)
-
-    scheduler.AdvanceBy(oneSecond)
-    Assert.That(result.[0], Is.EqualTo expected)
-    ()
-    
-[<Test>]
-let ``FlatMapAsync should take F# async workflows and flatmap them to observables``() =
-    let expected = "<head>fake header</head>"
-    let fakeHttpRequest _ =
-        async {  return expected }
-    let result    = ResizeArray()
-    let subject = new Subject<string>()
-
-    use mapper = subject 
-                    |> Observable.flatmapAsync fakeHttpRequest
-                    |> Observable.subscribe result.Add
-
-    Assert.That(result.Count, Is.EqualTo 0)
-
-    subject.OnNext("www.google.com")
-    subject.OnNext("www.microsoft.com")
-    subject.OnNext("www.apple.com")
-    
-    System.Threading.Thread.Sleep 100
-    // HACK: Yes this is using a Thread.Sleep. This is a problem in the current version of Rx 
-    // interoping with other concurrency models. James World has a great Stackoverflow post
-    // on the problems with this : http://stackoverflow.com/a/28236216
-    // Dave Sexton has made a pull request to try to resolve these issues: 
-    // https://github.com/Reactive-Extensions/Rx.NET/pull/65
-    //
-    // It looks like this will be in the next version of Rx to allow use of TestScheduler
-    // but for now we live with this hack
-
-    Assert.That(result.Count, Is.EqualTo 3)
-    Assert.That(result.[0], Is.EqualTo expected)
-    Assert.That(result.[1], Is.EqualTo expected)
-    Assert.That(result.[2], Is.EqualTo expected)

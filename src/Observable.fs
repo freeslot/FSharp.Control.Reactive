@@ -6,7 +6,6 @@ open System.Threading
 open System.Reactive
 open System.Reactive.Linq
 open System.Reactive.Concurrency
-open System.Reactive.Disposables
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -325,10 +324,10 @@ module Observable =
     // #region CombineLatest Functions
 
 
-    /// Merges the specified observable sequences into one observable sequence
-    /// whenever either of the observable sequences produces an element.
-    let combineLatest ( source1 : IObservable<'T1> ) ( source2 : IObservable<'T2> ) =
-        Observable.CombineLatest(source1, source2, fun t1 t2 -> (t1, t2) )
+    /// Merges the specified observable sequences into one observable sequence by  applying the map
+    /// whenever any of the observable sequences produces an element.
+    let combineLatest ( map : 'T1 -> 'T2 -> 'Result  ) ( source1 : IObservable<'T1> ) ( source2 : IObservable<'T2> ) =
+        Observable.CombineLatest(source1, source2, Func<'T1, 'T2 ,'Result> map )
 
     /// Merges the specified observable sequences into one observable sequence by 
     /// emmiting a list with the latest source elements of whenever any of the 
@@ -621,19 +620,6 @@ module Observable =
     let flatmapTask  ( map ) ( source:IObservable<'Source> ) : IObservable<'Result> =
         Observable.SelectMany( source, Func<'Source,Threading.Tasks.Task<'Result>> map ) 
 
-    ///Turns an F# async workflow into an observable
-    let ofAsync asyncOperation = 
-        Observable.FromAsync
-            (fun (token : Threading.CancellationToken) -> Async.StartAsTask(asyncOperation,cancellationToken = token))
-
-    ///Helper function for turning async workflows into observables
-    let liftAsync asyncOperation =         
-        asyncOperation >> ofAsync
-
-    /// Projects each element of an observable sequence to a async workflow and merges all of the async worksflow results into one observable sequence.
-    let flatmapAsync asyncOperation (source : IObservable<'Source>) = 
-        source.SelectMany(fun item -> liftAsync asyncOperation item)
-   
 
     /// Projects each element of an observable sequence to a task by incorporating the element's index 
     /// and merges all of the task results into one observable sequence.
@@ -949,10 +935,8 @@ module Observable =
     let intervalOn (scheduler : IScheduler) period = 
         Observable.Interval( period, scheduler )
 
-    /// IsEmpty returns an Observable that emits true if and only if the 
-    /// source Observable completes without emitting any items. 
-    let isEmpty source = 
-        Observable.IsEmpty source
+    /// Determines whether the given observable is empty 
+    let isEmpty source = source = Observable.Empty()
 
 
     /// Invokes an action for each element in the observable sequence, and propagates all observer 
@@ -1535,14 +1519,7 @@ module Observable =
     /// on the specified scheduler. This operation is not commonly used;  This only performs 
     /// the side-effects of subscription and unsubscription on the specified scheduler.
     ///  In order to invoke observer callbacks on a scheduler, use 'observeOn'
-    let subscribeOn (scheduler:Reactive.Concurrency.IScheduler) (source:IObservable<'Source>) : IObservable<'Source> =
-        Observable.SubscribeOn( source, scheduler )
-
-    /// Wraps the source sequence in order to run its subscription and unsubscription logic 
-    /// on the specified SynchronizationContext. This operation is not commonly used;  This only performs 
-    /// the side-effects of subscription and unsubscription on the specified scheduler.
-    ///  In order to invoke observer callbacks on a scheduler, use 'observeOn'
-    let subscribeOnContext (context:Threading.SynchronizationContext) (source:IObservable<'Source>) : IObservable<'Source> =
+    let subscribeOn (context:Threading.SynchronizationContext) (source:IObservable<'Source>) : IObservable<'Source> =
         Observable.SubscribeOn( source, context )
 
 
@@ -1931,10 +1908,3 @@ module Observable =
                    ( first         : IObservable<'Source1>               ) : IObservable<'Result> =
         Observable.Zip(first, second, Func<_,_,_> resultSelector )
  
-
- module Disposables = 
-     /// Returns an IDisposable that disposes all the underlying disposables
-     let compose (disposables: #seq<IDisposable>) =
-         Disposable.Create(fun _ -> 
-             disposables 
-             |> Seq.iter(fun x -> x.Dispose()))

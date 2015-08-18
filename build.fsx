@@ -170,9 +170,12 @@ Target "NuGet" (fun _ ->
                              "Rx-Core"      , GetPackageVersion "packages" "Rx-Core"
                              "Rx-Interfaces", GetPackageVersion "packages" "Rx-Interfaces"
                              "Rx-Linq"      , GetPackageVersion "packages" "Rx-Linq" ]
-            Files = [ (@"..\bin\FSharp.Control.Reactive.dll", Some "lib/net40", None)
-                      (@"..\bin\FSharp.Control.Reactive.xml", Some "lib/net40", None)
-                      (@"..\bin\FSharp.Control.Reactive.pdb", Some "lib/net40", None) ] })
+            Files = [ 
+                        (@"..\bin\lib\net45\FSharp.Control.Reactive.dll", Some "lib/net45", None)
+                        (@"..\bin\lib\net45\FSharp.Control.Reactive.xml", Some "lib/net45", None)
+                        (@"..\bin\lib\xamarinios10\FSharp.Control.Reactive.dll", Some "lib/xamarinios10", None)
+                        (@"..\bin\lib\xamarinios10\FSharp.Control.Reactive.xml", Some "lib/xamarinios10", None)
+                    ] })
         ("nuget/" + project + ".nuspec")
 )
 
