@@ -1484,9 +1484,9 @@ module Observable =
 
 
 //    /// Subscribes to the Observable with a next fuction and a tag
-//    let subscribeWithTag subscriptionTag (onNext: 'T -> unit) (observable: IObservable<'T>) =
-//          let obs = loggedObservable subscriptionTag observable
-//          obs.Subscribe(Action<_> onNext)
+    let subscribeWithTag subscriptionTag (onNext: 'T -> unit) (observable: IObservable<'T>) =
+          //let obs = loggedObservable subscriptionTag observable
+          observable.Subscribe(Action<_> onNext)
 
 
     /// Subscribes to the Observable with a next and an error-function.
