@@ -1479,40 +1479,40 @@ module Observable =
 
     /// Subscribes to the Observable with a next fuction.
     let subscribe(onNext: 'T -> unit) (observable: IObservable<'T>) =
-          let obs = loggedObservable "Default" observable
-          obs.Subscribe(Action<_> onNext)
+          //let obs = loggedObservable "Default" observable
+          observable.Subscribe(Action<_> onNext)
 
 
-    /// Subscribes to the Observable with a next fuction and a tag
-    let subscribeWithTag subscriptionTag (onNext: 'T -> unit) (observable: IObservable<'T>) =
-          let obs = loggedObservable subscriptionTag observable
-          obs.Subscribe(Action<_> onNext)
+//    /// Subscribes to the Observable with a next fuction and a tag
+//    let subscribeWithTag subscriptionTag (onNext: 'T -> unit) (observable: IObservable<'T>) =
+//          let obs = loggedObservable subscriptionTag observable
+//          obs.Subscribe(Action<_> onNext)
 
 
     /// Subscribes to the Observable with a next and an error-function.
     let subscribeWithError  ( onNext     : 'T   -> unit     ) 
                             ( onError    : exn  -> unit     ) 
                             ( observable : IObservable<'T>  ) =
-        let obs = loggedObservable "Default" observable
-        obs.Subscribe( Action<_> onNext, Action<exn> onError )
+        //let obs = loggedObservable "Default" observable
+        observable.Subscribe( Action<_> onNext, Action<exn> onError )
     
      
     /// Subscribes to the Observable with a next and a completion callback.
     let subscribeWithCompletion (onNext: 'T -> unit) (onCompleted: unit -> unit) (observable: IObservable<'T>) =
-            let obs = loggedObservable "Default" observable
-            obs.Subscribe(Action<_> onNext, Action onCompleted)
+        //let obs = loggedObservable "Default" observable
+        observable.Subscribe(Action<_> onNext, Action onCompleted)
     
 
     /// Subscribes to the observable with all three callbacks
     let subscribeWithCallbacks onNext onError onCompleted (observable: IObservable<'T>) =
-        let obs = loggedObservable "Default" observable
-        obs.Subscribe(Observer.Create(Action<_> onNext, Action<_> onError, Action onCompleted))
+        //let obs = loggedObservable "Default" observable
+        observable.Subscribe(Observer.Create(Action<_> onNext, Action<_> onError, Action onCompleted))
 
 
     /// Subscribes to the observable with the given observer
     let subscribeObserver observer (observable: IObservable<'T>) =
-        let obs = loggedObservable "Default" observable
-        obs.Subscribe observer
+        //let obs = loggedObservable "Default" observable
+        observable.Subscribe observer
 
 
     /// Wraps the source sequence in order to run its subscription and unsubscription logic 
